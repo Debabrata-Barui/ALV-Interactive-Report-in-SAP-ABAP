@@ -1,0 +1,267 @@
+REPORT YDB_ALV_REP.
+
+TYPE-POOLS: SLIS.
+TABLES: MARA.
+
+TYPES: BEGIN OF ST_MARA,
+       MATNR TYPE MATNR,
+       MTART TYPE MTART,
+       MBRSH TYPE MBRSH,
+       MEINS TYPE MEINS,
+  END OF ST_MARA.
+
+DATA: IT_MARA TYPE TABLE OF ST_MARA,
+      WA_MARA TYPE ST_MARA.
+
+DATA: IT_MAKT TYPE TABLE OF MAKT,
+      WA_MAKT TYPE MAKT.
+
+DATA : IT_FCAT TYPE SLIS_T_FIELDCAT_ALV ,
+       WA_FCAT TYPE SLIS_FIELDCAT_ALV.
+
+DATA: WA_LAYOUT TYPE SLIS_LAYOUT_ALV.
+
+DATA: IT_EVENT TYPE SLIS_T_EVENT,
+      WA_EVENT TYPE SLIS_ALV_EVENT.
+
+DATA: IT_HEADER TYPE SLIS_T_LISTHEADER,
+      WA_HEADER TYPE SLIS_LISTHEADER.
+
+
+DATA: LV_MATNR TYPE MATNR.
+
+
+DATA: D2(20) TYPE C,
+      YEAR(10) TYPE C,
+      MONTH(10) TYPE C,
+      DAY(10) TYPE C,
+      YDBDATE(40) TYPE C.
+
+
+D2 = SY-DATUM.
+
+YEAR = D2+0(4).
+MONTH = D2+4(2).
+DAY = D2+6(2).
+
+
+
+CONCATENATE DAY MONTH YEAR INTO YDBDATE SEPARATED BY '/'.
+
+
+
+START-OF-SELECTION.
+PERFORM GET_DATA.
+PERFORM FIELDCAT.
+PERFORM LAYOUT.
+
+PERFORM HEADING.
+PERFORM DISPLAY.
+END-OF-SELECTION.
+
+
+
+FORM GET_DATA.
+  SELECT MATNR
+         MTART
+         MBRSH
+         MEINS
+
+     FROM MARA
+     INTO TABLE IT_MARA UP TO 50 ROWS.
+ENDFORM.
+
+
+
+FORM DISPLAY.
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+   EXPORTING
+*     I_INTERFACE_CHECK                 = ' '
+*     I_BYPASSING_BUFFER                = ' '
+*     I_BUFFER_ACTIVE                   = ' '
+     I_CALLBACK_PROGRAM                = SY-REPID
+*     I_CALLBACK_PF_STATUS_SET          = ' '
+     I_CALLBACK_USER_COMMAND           = 'USR_CMM'
+*     I_CALLBACK_TOP_OF_PAGE            = ' '
+*     I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*     I_CALLBACK_HTML_END_OF_LIST       = ' '
+*     I_STRUCTURE_NAME                  =
+*     I_BACKGROUND_ID                   = ' '
+*     I_GRID_TITLE                      =
+*     I_GRID_SETTINGS                   =
+     IS_LAYOUT                         = WA_LAYOUT
+     IT_FIELDCAT                       = IT_FCAT
+*     IT_EXCLUDING                      =
+*     IT_SPECIAL_GROUPS                 =
+*     IT_SORT                           =
+*     IT_FILTER                         =
+*     IS_SEL_HIDE                       =
+*     I_DEFAULT                         = 'X'
+*     I_SAVE                            = ' '
+*     IS_VARIANT                        =
+     IT_EVENTS                         = IT_EVENT
+*     IT_EVENT_EXIT                     =
+*     IS_PRINT                          =
+*     IS_REPREP_ID                      =
+*     I_SCREEN_START_COLUMN             = 0
+*     I_SCREEN_START_LINE               = 0
+*     I_SCREEN_END_COLUMN               = 0
+*     I_SCREEN_END_LINE                 = 0
+*     I_HTML_HEIGHT_TOP                 = 0
+*     I_HTML_HEIGHT_END                 = 0
+*     IT_ALV_GRAPHICS                   =
+*     IT_HYPERLINK                      =
+*     IT_ADD_FIELDCAT                   =
+*     IT_EXCEPT_QINFO                   =
+*     IR_SALV_FULLSCREEN_ADAPTER        =
+*   IMPORTING
+*     E_EXIT_CAUSED_BY_CALLER           =
+*     ES_EXIT_CAUSED_BY_USER            =
+    TABLES
+      T_OUTTAB                          = IT_MARA
+*   EXCEPTIONS
+*     PROGRAM_ERROR                     = 1
+*     OTHERS                            = 2
+            .
+  IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+ENDFORM.
+
+FORM FIELDCAT.
+WA_FCAT-COL_POS = 1.
+WA_FCAT-FIELDNAME = 'MATNR'.
+WA_FCAT-TABNAME = 'IT_MARA'.
+WA_FCAT-SELTEXT_M = 'Material No'.
+WA_FCAT-KEY = 'X'.
+WA_FCAT-HOTSPOT = 'X'.
+APPEND WA_FCAT TO IT_FCAT.
+CLEAR WA_FCAT.
+
+WA_FCAT-COL_POS = 2.
+WA_FCAT-FIELDNAME = 'MTART'.
+WA_FCAT-TABNAME = 'IT_MARA'.
+WA_FCAT-SELTEXT_M = 'Material Type'.
+APPEND WA_FCAT TO IT_FCAT.
+CLEAR WA_FCAT.
+
+WA_FCAT-COL_POS = 3.
+WA_FCAT-FIELDNAME = 'MBRSH'.
+WA_FCAT-TABNAME = 'IT_MARA'.
+WA_FCAT-SELTEXT_M = 'Industry Sector'.
+APPEND WA_FCAT TO IT_FCAT.
+CLEAR WA_FCAT.
+
+WA_FCAT-COL_POS = 4.
+WA_FCAT-FIELDNAME = 'MEINS'.
+WA_FCAT-TABNAME = 'IT_MARA'.
+WA_FCAT-SELTEXT_M = 'Unit of Measure'.
+APPEND WA_FCAT TO IT_FCAT.
+CLEAR WA_FCAT.
+
+ENDFORM.
+
+FORM LAYOUT.
+  WA_LAYOUT-ZEBRA = 'X'.
+*  WA_LAYOUT-EDIT = 'X'.
+  WA_LAYOUT-COLWIDTH_OPTIMIZE = 'X'.
+ENDFORM.
+
+
+FORM HEADING.
+  CALL FUNCTION 'REUSE_ALV_EVENTS_GET'
+*   EXPORTING
+*     I_LIST_TYPE           = 0
+   IMPORTING
+     ET_EVENTS             = IT_EVENT .
+
+  READ TABLE IT_EVENT INTO WA_EVENT WITH KEY NAME = 'TOP_OF_PAGE'.
+  WA_EVENT-FORM = 'FORM_TOP_OF_PAGE'.
+  MODIFY IT_EVENT FROM WA_EVENT INDEX SY-TABIX.
+
+  READ TABLE IT_EVENT INTO WA_EVENT WITH KEY NAME = 'END_OF_LIST'.
+  WA_EVENT-FORM = 'FORM_END_OF_LIST'.
+  MODIFY IT_EVENT FROM WA_EVENT INDEX SY-TABIX.
+
+
+ENDFORM.
+
+FORM FORM_TOP_OF_PAGE.
+   WA_HEADER-TYP = 'H'.
+   WA_HEADER-INFO = 'MATERIAL MASTER REPORT'.
+   APPEND WA_HEADER TO IT_HEADER.
+   CLEAR WA_HEADER.
+
+   WA_HEADER-TYP = 'S'.
+   WA_HEADER-KEY = 'DATE:'.
+   WA_HEADER-INFO = YDBDATE.
+   APPEND WA_HEADER TO IT_HEADER.
+   CLEAR WA_HEADER.
+
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      IT_LIST_COMMENTARY       = IT_HEADER
+*     I_LOGO                   =
+*     I_END_OF_LIST_GRID       =
+*     I_ALV_FORM               =
+            .
+
+REFRESH: IT_HEADER.
+
+
+ENDFORM.
+
+
+FORM FORM_END_OF_LIST.
+  WA_HEADER-TYP = 'S'.
+  WA_HEADER-KEY = 'Created By :'.
+*  WA_HEADER-INFO = 'Debabrata Barui'.
+  APPEND WA_HEADER TO IT_HEADER.
+  CLEAR: WA_HEADER.
+
+  WA_HEADER-TYP = 'A'.
+  WA_HEADER-INFO = 'Debabrata Barui'.
+  APPEND WA_HEADER TO IT_HEADER.
+  CLEAR: WA_HEADER.
+
+
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      IT_LIST_COMMENTARY       = IT_HEADER
+*     I_LOGO                   =
+     I_END_OF_LIST_GRID       = 'X'
+*     I_ALV_FORM               =
+            .
+
+   REFRESH: IT_HEADER.
+
+ENDFORM.
+
+FORM USR_CMM USING R_UCOMM LIKE SY-UCOMM
+                          SELFIELD TYPE SLIS_SELFIELD.
+
+  LV_MATNR = SELFIELD-VALUE.
+
+  CASE R_UCOMM.
+    WHEN '&IC1'. "standard Function code for doubel click
+      READ TABLE IT_MARA INTO WA_MARA INDEX SELFIELD-TABINDEX.
+
+      IF SY-SUBRC = 0.
+*       SELECT * FROM MAKT INTO TABLE IT_MAKT WHERE MATNR = WA_MARA-MATNR.
+       SELECT * FROM MAKT INTO TABLE IT_MAKT WHERE MATNR = LV_MATNR.
+       CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+       EXPORTING
+          I_CALLBACK_PROGRAM                = SY-CPROG
+          I_STRUCTURE_NAME                  = 'MAKT'
+         TABLES
+           T_OUTTAB                          = IT_MAKT.
+
+     ENDIF.
+
+  ENDCASE.
+
+
+ENDFORM.
+
