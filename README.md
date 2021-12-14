@@ -1,4 +1,4 @@
-# ALV-Interactive-Report-in-SAP-ABAP
-ALV Interactive Report In SAP ABAP
+# Interactive-ALV-Report-in-SAP-ABAP
+Interactive ALV Report In SAP ABAP
 
-ALV Interactive Report using MARA and MAKT table
+Interactive ALV Report using MARA and MAKT table
